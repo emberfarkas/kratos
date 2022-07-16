@@ -3,6 +3,7 @@ package errors
 import (
 	"errors"
 	"fmt"
+	"io"
 
 	httpstatus "github.com/go-kratos/kratos/v2/transport/http/status"
 	"google.golang.org/genproto/googleapis/rpc/errdetails"
@@ -24,6 +25,7 @@ const (
 type Error struct {
 	Status
 	cause error
+	*stack
 }
 
 func (e *Error) Error() string {
@@ -65,6 +67,25 @@ func (e *Error) GRPCStatus() *status.Status {
 	return s
 }
 
+func (e *Error) Format(s fmt.State, verb rune) {
+	switch verb {
+	case 'v':
+		if s.Flag('+') {
+			msg := fmt.Sprintf("error: code = %d reason = %s message = %s metadata = %v cause = %v", e.Code, e.Reason, e.Message, e.Metadata, e.cause)
+			io.WriteString(s, msg)
+			e.stack.Format(s, verb)
+			return
+		}
+		fallthrough
+	case 's':
+		msg := fmt.Sprintf("error: code = %d reason = %s message = %s metadata = %v cause = %v", e.Code, e.Reason, e.Message, e.Metadata, e.cause)
+		io.WriteString(s, msg)
+	case 'q':
+		msg := fmt.Sprintf("error: code = %d reason = %s message = %s metadata = %v cause = %v", e.Code, e.Reason, e.Message, e.Metadata, e.cause)
+		fmt.Fprintf(s, "%q", msg)
+	}
+}
+
 // New returns an error object for the code, message.
 func New(code int, reason, message string) *Error {
 	return &Error{
@@ -73,6 +94,7 @@ func New(code int, reason, message string) *Error {
 			Message: message,
 			Reason:  reason,
 		},
+		stack: callers(),
 	}
 }
 
