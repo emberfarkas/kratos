@@ -143,6 +143,7 @@ func Clone(err *Error) *Error {
 			Message:  err.Message,
 			Metadata: metadata,
 		},
+		stack: err.stack,
 	}
 }
 
