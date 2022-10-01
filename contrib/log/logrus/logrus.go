@@ -1,8 +1,9 @@
 package logrus
 
 import (
-	"github.com/go-kratos/kratos/v2/log"
 	"github.com/sirupsen/logrus"
+
+	"github.com/go-kratos/kratos/v2/log"
 )
 
 var _ log.Logger = (*Logger)(nil)
@@ -33,6 +34,8 @@ func (l *Logger) Log(level log.Level, keyvals ...interface{}) (err error) {
 		logrusLevel = logrus.WarnLevel
 	case log.LevelError:
 		logrusLevel = logrus.ErrorLevel
+	case log.LevelFatal:
+		logrusLevel = logrus.FatalLevel
 	default:
 		logrusLevel = logrus.DebugLevel
 	}

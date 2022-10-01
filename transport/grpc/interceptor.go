@@ -3,11 +3,12 @@ package grpc
 import (
 	"context"
 
+	"google.golang.org/grpc"
+	grpcmd "google.golang.org/grpc/metadata"
+
 	ic "github.com/go-kratos/kratos/v2/internal/context"
 	"github.com/go-kratos/kratos/v2/middleware"
 	"github.com/go-kratos/kratos/v2/transport"
-	"google.golang.org/grpc"
-	grpcmd "google.golang.org/grpc/metadata"
 )
 
 // unaryServerInterceptor is a gRPC unary server interceptor
@@ -33,8 +34,8 @@ func (s *Server) unaryServerInterceptor() grpc.UnaryServerInterceptor {
 		h := func(ctx context.Context, req interface{}) (interface{}, error) {
 			return handler(ctx, req)
 		}
-		if len(s.middleware) > 0 {
-			h = middleware.Chain(s.middleware...)(h)
+		if next := s.middleware.Match(tr.Operation()); len(next) > 0 {
+			h = middleware.Chain(next...)(h)
 		}
 		reply, err := h(ctx, req)
 		if len(replyHeader) > 0 {

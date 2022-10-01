@@ -8,11 +8,12 @@ import (
 
 	"github.com/AlecAivazis/survey/v2"
 	"github.com/fatih/color"
+
 	"github.com/go-kratos/kratos/cmd/kratos/v2/internal/base"
 )
 
 var repoAddIgnores = []string{
-	".git", ".github", "api", "README.md", "LICENSE", "go.mod", "go.sum", "third_party",
+	".git", ".github", "api", "README.md", "LICENSE", "go.mod", "go.sum", "third_party", "openapi.yaml", ".gitignore",
 }
 
 func (p *Project) Add(ctx context.Context, dir string, layout string, branch string, mod string) error {

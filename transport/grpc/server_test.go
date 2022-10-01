@@ -11,11 +11,13 @@ import (
 	"testing"
 	"time"
 
+	"google.golang.org/grpc"
+
 	"github.com/go-kratos/kratos/v2/errors"
+	"github.com/go-kratos/kratos/v2/internal/matcher"
 	pb "github.com/go-kratos/kratos/v2/internal/testdata/helloworld"
 	"github.com/go-kratos/kratos/v2/middleware"
 	"github.com/go-kratos/kratos/v2/transport"
-	"google.golang.org/grpc"
 )
 
 // server is used to implement helloworld.GreeterServer.
@@ -198,17 +200,6 @@ func TestTimeout(t *testing.T) {
 	}
 }
 
-func TestMiddleware(t *testing.T) {
-	o := &Server{}
-	v := []middleware.Middleware{
-		func(middleware.Handler) middleware.Handler { return nil },
-	}
-	Middleware(v...)(o)
-	if !reflect.DeepEqual(v, o.middleware) {
-		t.Errorf("expect %v, got %v", v, o.middleware)
-	}
-}
-
 func TestTLSConfig(t *testing.T) {
 	o := &Server{}
 	v := &tls.Config{}
@@ -273,9 +264,10 @@ func TestServer_unaryServerInterceptor(t *testing.T) {
 	srv := &Server{
 		baseCtx:    context.Background(),
 		endpoint:   u,
-		middleware: []middleware.Middleware{EmptyMiddleware()},
 		timeout:    time.Duration(10),
+		middleware: matcher.New(),
 	}
+	srv.middleware.Use(EmptyMiddleware())
 	req := &struct{}{}
 	rv, err := srv.unaryServerInterceptor()(context.TODO(), req, &grpc.UnaryServerInfo{}, func(ctx context.Context, req interface{}) (i interface{}, e error) {
 		return &testResp{Data: "hi"}, nil
